@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - Red</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #151515;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
+            text-align: center;
+            width: 320px;
+            border: 1px solid #330000;
+        }
+
+        /* Estilo da Imagem */
+        .logo-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 2px solid #ff0000;
+            object-fit: cover;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        h2 { color: #ff0000; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border: 1px solid #440000;
+            background: #202020;
+            color: white;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus { border-color: #ff0000; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff0000;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background-color: #cc0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        #dashboard { display: none; }
+
+        .status-box {
+            background: #202020;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .error-msg {
+            color: #ff0000;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="container">
+        <h2>BYPASS MONITE</h2>
+        <input type="password" id="keyInput" placeholder="DIGITE A KEY...">
+        <button onclick="checkKey()">Autenticar</button>
+        <p id="error" class="error-msg">KEY INCORRETA!</p>
+    </div>
+
+    <div id="dashboard" class="container">
+        <img src="https://cdn.discordapp.com/attachments/1455438934241968198/1457148470313095334/1688.png?ex=695af2c3&is=6959a143&hm=47facf442543a875848ac0ad4d8b75581dba3a7a8d6be74acd9f7bd2c62d0e09&" alt="Logo Monite" class="logo-img">
+        
+        <h2>Monite Bypass</h2>
+        
+        <div class="status-box">
+            Status: <span id="status-text" style="color: #ff0000;">Aguardando...</span><br>
+            Target: <span style="font-size: 0.7rem;">com.dts.freefireth</span>
+        </div>
+        
+        <button onclick="executeBypass()">RESTAURAR PASTAS (BYPASS)</button>
+    </div>
+
+    <script>
+        function checkKey() {
+            const key = document.getElementById('keyInput').value;
+            const loginScreen = document.getElementById('login-screen');
+            const dashboard = document.getElementById('dashboard');
+            const errorMsg = document.getElementById('error');
+
+            if (key === "BYPASSMONITE") {
+                loginScreen.style.display = "none";
+                dashboard.style.display = "block";
+            } else {
+                errorMsg.style.display = "block";
+                setTimeout(() => { errorMsg.style.display = "none"; }, 2000);
+            }
+        }
+
+        function executeBypass() {
+            const targetPath = "/storage/emulated/0/Android/data/com.dts.freefireth";
+            
+            // Simulação visual de carregamento
+            const statusText = document.getElementById('status-text');
+            statusText.innerText = "PROCESSANDO...";
+            statusText.style.color = "yellow";
+
+            setTimeout(() => {
+                console.log("Iniciando restauração em: " + targetPath);
+                alert("BYPASS ATIVADO!\n\nBypass concluído com sucesso. Pastas restauradas para o caminho original.");
+                
+                statusText.innerText = "ATIVADO";
+                statusText.style.color = "#00ff00";
+
+                const btn = document.querySelector('#dashboard button');
+                btn.innerHTML = "CONCLUÍDO";
+                btn.style.backgroundColor = "#550000";
+                btn.disabled = true;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
