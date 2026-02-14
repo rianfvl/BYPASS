@@ -3,152 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Controle - Red</title>
+    <title>ADMIN | RODRIGUES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        :root {
+            --primary: #1e1e2f; 
+            --accent: #ffffff; /* Mudado para Branco */
+            --glow: #6246ff;   /* Roxo para o fundo do gráfico */
+            --bg: #050505;
+            --card-bg: #0d0d15;
+            --text: #ffffff;
+            --danger: #ff4646;
         }
 
-        .container {
-            background-color: #151515;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
-            text-align: center;
-            width: 320px;
-            border: 1px solid #330000;
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+
+        #login-div { height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
+        .login-card { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; width: 100%; }
+        
+        input { padding: 14px; margin: 10px 0; width: 100%; background: #050505; border: 1px solid #2a2a40; color: white; border-radius: 6px; box-sizing: border-box; }
+        .btn-primary { padding: 14px; width: 100%; background: var(--accent); border: none; color: #000; font-weight: 900; cursor: pointer; border-radius: 6px; text-transform: uppercase; margin-top: 10px; }
+
+        .panel { display: none; width: 100%; max-width: 1100px; animation: fadeIn 0.5s; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card .value { font-size: 2rem; font-weight: 900; color: var(--accent); }
+
+        .chart-container { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            margin-bottom: 30px; 
+            height: 350px; 
         }
 
-        /* Estilo da Imagem */
-        .logo-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 2px solid #ff0000;
-            object-fit: cover;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-        }
+        .table-container { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; font-size: 0.85rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { background: #161625; color: var(--accent); text-transform: uppercase; }
 
-        h2 { color: #ff0000; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
+        .btn-maint { padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; color: #000; }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 6px;
-            border: 1px solid #440000;
-            background: #202020;
-            color: white;
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        input:focus { border-color: #ff0000; }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #ff0000;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-        }
-
-        button:hover {
-            background-color: #cc0000;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-        }
-
-        #dashboard { display: none; }
-
-        .status-box {
-            background: #202020;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            color: #ccc;
-        }
-
-        .error-msg {
-            color: #ff0000;
-            font-size: 0.8rem;
-            margin-top: 5px;
-            display: none;
-            font-weight: bold;
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="container">
-        <h2>BYPASS MONITE</h2>
-        <input type="password" id="keyInput" placeholder="DIGITE A KEY...">
-        <button onclick="checkKey()">Autenticar</button>
-        <p id="error" class="error-msg">KEY INCORRETA!</p>
+    <div id="login-div">
+        <div class="login-card">
+            <h2 style="color: var(--accent); font-weight: 900;">ADMIN PANEL</h2>
+            <input type="email" id="email" placeholder="Seu E-mail">
+            <input type="password" id="pass" placeholder="Sua Senha">
+            <button class="btn-primary" onclick="logar()">Acessar Sistema</button>
+        </div>
     </div>
 
-    <div id="dashboard" class="container">
-        <img src="https://cdn.discordapp.com/attachments/1455438934241968198/1457148470313095334/1688.png?ex=695af2c3&is=6959a143&hm=47facf442543a875848ac0ad4d8b75581dba3a7a8d6be74acd9f7bd2c62d0e09&" alt="Logo Monite" class="logo-img">
-        
-        <h2>Monite Bypass</h2>
-        
-        <div class="status-box">
-            Status: <span id="status-text" style="color: #ff0000;">Aguardando...</span><br>
-            Target: <span style="font-size: 0.7rem;">com.dts.freefireth</span>
+    <div class="panel" id="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="margin:0; font-weight: 900; letter-spacing: -1px;">ANALYTICS</h1>
+            <button id="mBtn" class="btn-maint" onclick="toggleStatus()">Carregando...</button>
         </div>
-        
-        <button onclick="executeBypass()">RESTAURAR PASTAS (BYPASS)</button>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 style="font-size: 0.7rem; opacity: 0.5; margin-top: 0;">SALDO TOTAL RODRIGUES SHOP</h3>
+                <div class="value" id="total-saldo">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <h3 style="font-size: 0.7rem; opacity: 0.5; margin-top: 0;">PEDIDOS GERADOS</h3>
+                <div class="value" id="total-vendas">0</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="vendasChart"></canvas>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DATA/HORA</th>
+                        <th>CLIENTE</th>
+                        <th>PRODUTO</th>
+                        <th>VALOR</th>
+                    </tr>
+                </thead>
+                <tbody id="logs"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        function checkKey() {
-            const key = document.getElementById('keyInput').value;
-            const loginScreen = document.getElementById('login-screen');
-            const dashboard = document.getElementById('dashboard');
-            const errorMsg = document.getElementById('error');
+        // Suas chaves (Mantidas)
+        const firebaseConfig = { apiKey: "AIzaSyAoGCo4_tMeaXZsJAa2ckzi7E6zG0vQ44A", authDomain: "rodrigues-shop.firebaseapp.com", projectId: "rodrigues-shop", storageBucket: "rodrigues-shop.firebasestorage.app", messagingSenderId: "856611658964", appId: "1:856611658964:web:87faee9416fc751b0a2f41" };
+        firebase.initializeApp(firebaseConfig);
+        
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-            if (key === "BYPASSMONITE") {
-                loginScreen.style.display = "none";
-                dashboard.style.display = "block";
-            } else {
-                errorMsg.style.display = "block";
-                setTimeout(() => { errorMsg.style.display = "none"; }, 2000);
-            }
+        let vChart;
+        let mStatusGlobal = false;
+
+        // LOGIN SEGURO VIA FIREBASE AUTH
+        function logar() {
+            const e = document.getElementById('email').value;
+            const s = document.getElementById('pass').value;
+
+            auth.signInWithEmailAndPassword(e, s)
+                .then(() => {
+                    document.getElementById('login-div').style.display = 'none';
+                    document.getElementById('panel').style.display = 'block';
+                    initChart();
+                    carregarDados();
+                })
+                .catch((error) => {
+                    alert("Erro ao acessar: " + error.message);
+                });
         }
 
-        function executeBypass() {
-            const targetPath = "/storage/emulated/0/Android/data/com.dts.freefireth";
-            
-            // Simulação visual de carregamento
-            const statusText = document.getElementById('status-text');
-            statusText.innerText = "PROCESSANDO...";
-            statusText.style.color = "yellow";
+        function initChart() {
+            const ctx = document.getElementById('vendasChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(98, 70, 255, 0.4)'); // Roxo no topo
+            gradient.addColorStop(1, 'rgba(98, 70, 255, 0)');   // Transparente na base
 
-            setTimeout(() => {
-                console.log("Iniciando restauração em: " + targetPath);
-                alert("BYPASS ATIVADO!\n\nBypass concluído com sucesso. Pastas restauradas para o caminho original.");
-                
-                statusText.innerText = "ATIVADO";
-                statusText.style.color = "#00ff00";
+            vChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Volume',
+                        data: [],
+                        borderColor: '#ffffff', // Linha Branca
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ffffff',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: gradient,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#555' } },
+                        x: { grid: { display: false }, ticks: { color: '#555' } }
+                    }
+                }
+            });
+        }
 
-                const btn = document.querySelector('#dashboard button');
-                btn.innerHTML = "CONCLUÍDO";
-                btn.style.backgroundColor = "#550000";
-                btn.disabled = true;
-            }, 1500);
+        function carregarDados() {
+            db.collection("config").doc("site1").onSnapshot(doc => {
+                if(doc.exists) {
+                    mStatusGlobal = doc.data().maintenance;
+                    const b = document.getElementById('mBtn');
+                    b.innerText = mStatusGlobal ? "MODO MANUTENÇÃO: ON" : "SITE: ONLINE";
+                    b.style.background = mStatusGlobal ? "#ff4646" : "#ffffff";
+                }
+            });
+
+            db.collection("vendas_logs").orderBy("data", "desc").onSnapshot(snap => {
+                let h = "";
+                let total = 0;
+                let dataChart = {};
+
+                snap.forEach(doc => {
+                    const l = doc.data();
+                    const v = parseFloat(l.valor.replace(',', '.'));
+                    total += v;
+                    dataChart[l.produto] = (dataChart[l.produto] || 0) + 1;
+
+                    h += `<tr><td>${l.data}</td><td>${l.titular}</td><td>${l.produto}</td><td style="font-weight:bold">R$ ${l.valor}</td></tr>`;
+                });
+
+                document.getElementById('logs').innerHTML = h;
+                document.getElementById('total-saldo').innerText = `R$ ${total.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+                document.getElementById('total-vendas').innerText = snap.size;
+
+                vChart.data.labels = Object.keys(dataChart);
+                vChart.data.datasets[0].data = Object.values(dataChart);
+                vChart.update();
+            });
+        }
+
+        function toggleStatus() {
+            db.collection("config").doc("site1").update({ maintenance: !mStatusGlobal });
         }
     </script>
 </body>
