@@ -2,310 +2,192 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RODRIGUES SHOP | OFICIAL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ADMIN | RODRIGUES</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
-            --primary: #FF4500;
-            --primary-glow: rgba(255, 69, 0, 0.4);
-            --bg: #050505;
-            --card-bg: rgba(12, 12, 12, 0.98);
-            --text: #ffffff;
-            --grid-color: rgba(255, 69, 0, 0.08);
-            --discord: #5865F2;
-            --pix: #32BCAD;
+            --primary: #1e1e2f; --accent: #ffffff; --glow: #6246ff;   
+            --bg: #050505; --card-bg: #0d0d15; --text: #ffffff; --danger: #ff4646;
+            --success: #00ff88;
         }
 
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg);
-            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 50px 50px; color: var(--text); line-height: 1.6; overflow-x: hidden;
+        body { 
+            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
+            margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; 
         }
 
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 40px 20px; 
-            text-align: center; 
-        }
+        #login-div { height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
+        .login-card { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; width: 100%; }
+        input { padding: 14px; margin: 10px 0; width: 100%; background: #050505; border: 1px solid #2a2a40; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
+        .btn-primary { padding: 14px; width: 100%; background: var(--accent); border: none; color: #000; font-weight: 900; cursor: pointer; border-radius: 6px; text-transform: uppercase; }
 
-        /* Floating Discord */
-        .floating-discord {
-            position: fixed; right: 20px; bottom: 20px; background: var(--discord);
-            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(88, 101, 242, 0.5); z-index: 9999; transition: 0.3s; cursor: pointer;
-        }
-        .floating-discord:hover { transform: scale(1.1); }
-        .floating-discord svg { width: 30px; fill: white; }
-
-        .shop-header { 
-            font-size: clamp(2.5rem, 10vw, 5rem); 
-            font-weight: 900; color: var(--primary); 
-            text-transform: uppercase; letter-spacing: clamp(2px, 2vw, 10px); 
-            text-shadow: 0 0 15px var(--primary-glow);
-            margin-bottom: 20px;
-        }
-
-        /* Stats Bar Responsiva */
-        .stats-bar {
+        .panel { display: none; width: 100%; max-width: 1100px; animation: fadeIn 0.5s; }
+        
+        /* ALTERAÇÃO AQUI: UM EMBAIXO DO OUTRO */
+        .stats-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px; margin: 40px 0; padding: 20px; 
-            background: rgba(255,255,255,0.03); border: 1px solid #1a1a1a;
-            border-radius: 8px;
-        }
-        .stat-item h4 { margin: 0; font-size: 1.8rem; color: var(--primary); }
-        .stat-item p { margin: 0; font-size: 0.75rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; }
-
-        /* Mod Promo Section - Ajustada para Desktop/Mobile */
-        .mod-promo {
-            background: linear-gradient(90deg, #111, #1a0800);
-            border: 1px solid var(--primary); padding: 30px; margin-bottom: 40px;
-            display: flex; align-items: center; justify-content: space-between; border-radius: 8px;
-            text-align: left; flex-wrap: wrap; gap: 20px;
-        }
-        .mod-promo-text { flex: 1; min-width: 280px; }
-
-        .categories-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 10px; margin-bottom: 30px; 
+            grid-template-columns: 1fr; /* Apenas uma coluna para empilhar */
+            gap: 12px; 
+            margin-bottom: 25px; 
         }
         
-        .cat-btn { 
-            background: #111; border: 1px solid #222; padding: 15px; 
-            color: #777; cursor: pointer; font-weight: 900; 
-            text-transform: uppercase; font-size: 0.75rem; transition: 0.2s; 
-            border-radius: 4px;
-        }
-        .cat-btn:hover { background: #161616; border-color: #444; }
-        .cat-btn.active { border-color: var(--primary); color: var(--primary); box-shadow: inset 0 0 10px var(--primary-glow); }
+        .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card .value { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
+        .stat-card h3 { font-size: 0.7rem; opacity: 0.5; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Grid de Produtos - Ajustado para 3 colunas no PC */
-        .products-grid { 
-            display: none; 
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
-            gap: 25px; 
-            animation: fadeInUp 0.4s ease-out; 
+        .chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 25px; height: 300px; }
+
+        .table-wrap { 
+            width: 100%; 
+            overflow-x: auto; 
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            -webkit-overflow-scrolling: touch;
         }
-        .products-grid.active { display: grid; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: #161625; color: var(--accent); text-transform: uppercase; font-size: 0.7rem; padding: 15px; text-align: left; }
+        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
         
-        .card { 
-            background: var(--card-bg); border: 1px solid #1a1a1a; 
-            padding: 30px; text-align: left; transition: 0.3s; 
-            border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .card:hover { border-color: var(--primary); transform: translateY(-8px); background: #0a0a0a; }
-        .card h3 { margin-top: 0; min-height: 50px; font-size: 1.2rem; }
-        .card .price { font-size: 2.2rem; font-weight: 900; margin: 20px 0; color: #fff; }
+        .val-destaque { color: var(--success); font-weight: 900; }
+        .btn-maint { padding: 10px 18px; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: #000; font-size: 0.75rem; }
 
-        .buy-btn { 
-            display: block; text-decoration: none; text-align: center;
-            background: var(--primary); color: white; border: none; width: 100%; padding: 15px; 
-            font-weight: 900; cursor: pointer; text-transform: uppercase; 
-            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0% 100%);
-            transition: 0.3s;
-        }
-        .buy-btn:hover:not(:disabled) { filter: brightness(1.2); transform: scale(1.02); }
-        .buy-btn:disabled { background: #333; cursor: not-allowed; opacity: 0.5; clip-path: none; }
-
-        /* Modal / Checkout Responsivo */
-        .modal-overlay { 
-            display: none; position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.95); z-index: 10000; 
-            align-items: center; justify-content: center; backdrop-filter: blur(10px);
-            padding: 20px;
-        }
-        .checkout-box { 
-            background: #0d0d0d; border: 1px solid var(--primary); 
-            width: 100%; max-width: 500px; padding: clamp(20px, 5vw, 40px); 
-            border-radius: 8px; position: relative; max-height: 90vh; overflow-y: auto;
-        }
-
-        /* Page Modding Estilizada */
-        #page-modding { display: none; text-align: left; animation: fadeInUp 0.4s; }
-        .modding-content { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-            gap: 40px; margin-top: 40px; background: #0a0a0a; 
-            padding: clamp(20px, 5vw, 50px); border: 1px solid #1a1a1a; border-radius: 8px;
-        }
-        .back-btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 12px 25px; cursor: pointer; margin-bottom: 20px; font-weight: 900; text-transform: uppercase; border-radius: 4px; transition: 0.3s; }
-        .back-btn:hover { background: var(--primary); color: white; }
-
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Media Query para Celular Deitado / Tablets pequenos */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .shop-header { font-size: 2.5rem; }
-            .modal-overlay { align-items: flex-start; }
-            .checkout-box { margin-top: 20px; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <a href="https://discord.gg/6jUdx6marp" class="floating-discord" target="_blank" title="Suporte Discord">
-        <svg viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.06,72.06,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.71,32.65-1.82,56.6.39,80.21a105.73,105.73,0,0,0,32.17,16.15,77.7,77.7,0,0,0,6.89-11.11,68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.72-27.49-4.59-51.05-19.54-72.14ZM42.45,65.69C36.18,65.69,31,60,31,53s5.07-12.59,11.44-12.59S54,46.13,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5.07-12.59,11.44-12.59S96.23,46.13,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
-    </a>
-
-    <div class="container">
-        <div id="page-home">
-            <header>
-                <div class="shop-header">RODRIGUES SHOP</div>
-            </header>
-            
-            <div class="stats-bar">
-                <div class="stat-item"><h4>+1.000</h4><p>Vendas Concluídas</p></div>
-                <div class="stat-item"><h4>+1.000</h4><p>Membros Ativos</p></div>
-                <div class="stat-item"><h4>100%</h4><p>Antiban Security</p></div>
-                <div class="stat-item"><h4 style="color:#00ff00">ONLINE</h4><p>Status</p></div>
-            </div>
-
-            <section class="mod-promo">
-                <div class="mod-promo-text">
-                    <h3 style="margin:0; color:var(--primary); font-size: 1.5rem;">CRIE SEU PRÓPRIO MOD</h3>
-                    <p style="margin:5px 0 0; opacity:0.7;">Transforme suas ideias em softwares reais e funcionais com nosso curso.</p>
-                </div>
-                <button class="buy-btn" style="width:auto; padding: 15px 50px;" onclick="togglePage('modding')">SAIBA MAIS</button>
-            </section>
-
-            <nav class="categories-grid">
-                <button class="cat-btn active" onclick="showCat('cat1', this)">BYPASS IOS</button>
-                <button class="cat-btn" onclick="showCat('cat2', this)">PAINEL ANDROID</button>
-                <button class="cat-btn" onclick="showCat('cat3', this)">PAINEL IOS</button>
-                <button class="cat-btn" onclick="showCat('cat4', this)">HS PESCOÇO ANDROID</button>
-                <button class="cat-btn" onclick="showCat('cat5', this)">HS PESCOÇO IOS</button>
-            </nav>
-
-            <div id="cat1" class="products-grid active">
-                <div class="card"><h3>BYPASS iOS 30 DIAS</h3><div class="price">R$ 400,00</div><button class="buy-btn" onclick="openCheckout('BYPASS iOS 30 DIAS', '400,00')">Adquirir</button></div>
-                <div class="card"><h3>BYPASS iOS PERMANENTE</h3><div class="price">R$ 750,00</div><button class="buy-btn" onclick="openCheckout('BYPASS iOS PERMANENTE', '750,00')">Adquirir</button></div>
-            </div>
-
-            <div id="cat2" class="products-grid">
-                <div class="card"><h3>PAINEL ANDROID DIÁRIO</h3><div class="price">R$ 20,00</div><button class="buy-btn" onclick="openCheckout('PAINEL ANDROID DIARIO', '20,00')">Adquirir</button></div>
-                <div class="card"><h3>PAINEL ANDROID 15 DIAS</h3><div class="price">R$ 45,00</div><button class="buy-btn" onclick="openCheckout('PAINEL ANDROID 15 DIAS', '45,00')">Adquirir</button></div>
-                <div class="card"><h3>PAINEL ANDROID 30 DIAS</h3><div class="price">R$ 75,00</div><button class="buy-btn" onclick="openCheckout('PAINEL ANDROID 30 DIAS', '75,00')">Adquirir</button></div>
-            </div>
-
-            <div id="cat3" class="products-grid">
-                <div class="card"><h3>PAINEL iOS 1 DIA</h3><div class="price">R$ 20,00</div><button class="buy-btn" onclick="openCheckout('PAINEL iOS 1 DIA', '20,00')">Adquirir</button></div>
-                <div class="card"><h3>PAINEL iOS 7 DIAS</h3><div class="price">R$ 40,00</div><button class="buy-btn" onclick="openCheckout('PAINEL iOS 7 DIAS', '40,00')">Adquirir</button></div>
-                <div class="card"><h3>PAINEL iOS 30 DIAS</h3><div class="price">R$ 80,00</div><button class="buy-btn" onclick="openCheckout('PAINEL iOS 30 DIAS', '80,00')">Adquirir</button></div>
-            </div>
-
-            <div id="cat4" class="products-grid">
-                <div class="card"><h3>HS PESCOÇO AND 7 DIAS</h3><div class="price">R$ 15,00</div><button class="buy-btn" onclick="openCheckout('HS PESCOÇO AND 7 DIAS', '15,00')">Adquirir</button></div>
-                <div class="card"><h3>HS PESCOÇO AND 30 DIAS</h3><div class="price">R$ 40,00</div><button class="buy-btn" onclick="openCheckout('HS PESCOÇO AND 30 DIAS', '40,00')">Adquirir</button></div>
-            </div>
-
-            <div id="cat5" class="products-grid">
-                <div class="card"><h3>HS PESCOÇO iOS 30 DIAS</h3><div class="price">R$ 40,00</div><button class="buy-btn" onclick="openCheckout('HS PESCOÇO iOS 30 DIAS', '40,00')">Adquirir</button></div>
-                <div class="card"><h3>HS PESCOÇO iOS PERMANENTE</h3><div class="price">R$ 90,00</div><button class="buy-btn" onclick="openCheckout('HS PESCOÇO iOS PERMANENTE', '90,00')">Adquirir</button></div>
-            </div>
-        </div>
-
-        <div id="page-modding">
-            <button class="back-btn" onclick="togglePage('home')">← Voltar para a Loja</button>
-            <h1 style="color:var(--primary); font-size: clamp(2rem, 5vw, 3.5rem); margin: 0;">CURSO MODDING ANDROID</h1>
-            <div class="modding-content">
-                <div>
-                    <h2 style="color:white; border-bottom: 2px solid var(--primary); display: inline-block;">O que você vai aprender?</h2>
-                    <ul style="list-style: none; padding: 0; margin-top: 20px; text-align: left;">
-                        <li style="margin-bottom: 10px;">✅ Estrutura de Injeção Profissional</li>
-                        <li style="margin-bottom: 10px;">✅ Bypass Anti-Cheat</li>
-                        <li style="margin-bottom: 10px;">✅ Interface ImGui Personalizada</li>
-                        <li style="margin-bottom: 10px;">✅ Lógica de Aimbot & ESP</li>
-                        <li style="margin-bottom: 10px;">✅ Suporte Vitalício</li>
-                    </ul>
-                </div>
-                <div style="text-align: center; background: #111; padding: 40px; border: 1px dashed var(--primary); border-radius: 8px;">
-                    <p style="font-size: 1rem; opacity: 0.7;">Investimento único</p>
-                    <div style="font-size: 4rem; font-weight: 900; color: white; margin: 10px 0;">R$ 150,00</div>
-                    <button class="buy-btn" style="padding: 20px;" onclick="openCheckout('CURSO MODDING ANDROID', '150,00')">ADQUIRIR AGORA</button>
-                </div>
-            </div>
+    <div id="login-div">
+        <img src="https://i.ibb.co/9k9Vj1wP/image.png" style="width:100px; border-radius:50%; border:3px solid var(--glow); margin-bottom:20px;">
+        <div class="login-card">
+            <h2 style="font-weight: 900; margin-bottom: 20px;">RODRIGUES ADMIN</h2>
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="pass" placeholder="Senha">
+            <button class="btn-primary" onclick="logar()">Acessar</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="checkoutModal">
-        <div class="checkout-box">
-            <div style="background: #ffaa0022; color: #ffaa00; padding: 5px 12px; font-size: 0.7rem; font-weight: 700; border-radius: 4px; display: inline-block; margin-bottom: 15px;">PAGAMENTO SEMIAUTOMÁTICO</div>
-            <div id="prodName" style="color: var(--primary); font-weight: 900; font-size: 1.6rem; text-transform: uppercase;">PRODUTO</div>
-            <div id="prodPrice" style="font-size: 3rem; font-weight: 900; margin: 15px 0;">R$ 0,00</div>
+    <div class="panel" id="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h1 style="margin:0; font-weight: 900;">ANALYTICS</h1>
+            <button id="mBtn" class="btn-maint" onclick="toggleStatus()">Carregando...</button>
+        </div>
 
-            <div class="pix-container">
-                <small style="color:#888; display: block; margin-bottom: 5px;">CHAVE PIX (COPIE E COLE)</small>
-                <div class="pix-key" id="pixKey" style="background: #000; padding: 10px; border-radius: 4px; margin-bottom: 10px;">826f68ba-d43e-44cf-b99e-d099ed91b70c</div>
-                <button onclick="copyPix()" style="background: var(--primary); border:none; color:white; padding:10px 20px; font-size:0.8rem; cursor:pointer; font-weight: 900; width: 100%; border-radius: 4px;">COPIAR CHAVE</button>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>SALDO TOTAL</h3>
+                <div class="value" id="total-saldo">R$ 0,00</div>
             </div>
-
-            <div style="background: #1a1a1a; padding: 15px; font-size: 0.85rem; border-left: 4px solid var(--primary); text-align: left; margin: 20px 0; border-radius: 0 4px 4px 0;">
-                <strong>Como receber:</strong><br>
-                1. Pague o valor via PIX.<br>
-                2. Tire print do comprovante.<br>
-                3. Envie no Discord para liberar o download.
+            <div class="stat-card">
+                <h3>PEDIDOS GERADOS</h3>
+                <div class="value" id="total-vendas">0</div>
             </div>
+        </div>
 
-            <label class="terms-area">
-                <input type="checkbox" id="termsCheck" onchange="toggleBuyButton()">
-                <span>Aceito que este é um produto digital e não reembolsável.</span>
-            </label>
+        <div class="chart-container">
+            <canvas id="vendasChart"></canvas>
+        </div>
 
-            <button id="finalBuyBtn" class="buy-btn" disabled onclick="goToDiscord()">JÁ PAGUEI, SOLICITAR PRODUTO</button>
-            <button onclick="closeCheckout()" style="background:transparent; color:#555; border:none; margin-top:20px; cursor:pointer; font-weight: bold; width: 100%;">FECHAR</button>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DATA/HORA</th>
+                        <th>CLIENTE</th>
+                        <th>PRODUTO</th>
+                        <th>VALOR PAGO</th>
+                    </tr>
+                </thead>
+                <tbody id="logs"></tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        const CHAVE_PIX = "826f68ba-d43e-44cf-b99e-d099ed91b70c";
+        const firebaseConfig = { 
+            apiKey: "AIzaSyAoGCo4_tMeaXZsJAa2ckzi7E6zG0vQ44A", 
+            authDomain: "rodrigues-shop.firebaseapp.com", 
+            projectId: "rodrigues-shop", 
+            storageBucket: "rodrigues-shop.firebasestorage.app", 
+            messagingSenderId: "856611658964", 
+            appId: "1:856611658964:web:87faee9416fc751b0a2f41" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-        function showCat(id, btn) {
-            document.querySelectorAll('.products-grid').forEach(g => g.classList.remove('active'));
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
-        }
+        let vChart;
+        let mStatusGlobal = false;
 
-        function togglePage(page) {
-            if(page === 'modding') {
-                document.getElementById('page-home').style.display = 'none';
-                document.getElementById('page-modding').style.display = 'block';
+        function logar() {
+            const e = document.getElementById('email').value;
+            const s = document.getElementById('pass').value;
+            if(s === "Keniacarla2013") {
+                abrirPainel();
             } else {
-                document.getElementById('page-home').style.display = 'block';
-                document.getElementById('page-modding').style.display = 'none';
+                auth.signInWithEmailAndPassword(e, s).then(() => abrirPainel())
+                .catch(err => alert("Senha Incorreta"));
             }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function openCheckout(name, price) {
-            document.getElementById('prodName').innerText = name;
-            document.getElementById('prodPrice').innerText = 'R$ ' + price;
-            document.getElementById('pixKey').innerText = CHAVE_PIX;
-            document.getElementById('checkoutModal').style.display = 'flex';
-            document.getElementById('termsCheck').checked = false;
-            document.getElementById('finalBuyBtn').disabled = true;
+        function abrirPainel() {
+            document.getElementById('login-div').style.display = 'none';
+            document.getElementById('panel').style.display = 'block';
+            initChart();
+            carregarDados();
         }
 
-        function closeCheckout() {
-            document.getElementById('checkoutModal').style.display = 'none';
+        function initChart() {
+            const ctx = document.getElementById('vendasChart').getContext('2d');
+            vChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ data: [], borderColor: '#ffffff', backgroundColor: 'rgba(98, 70, 255, 0.2)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
         }
 
-        function toggleBuyButton() {
-            document.getElementById('finalBuyBtn').disabled = !document.getElementById('termsCheck').checked;
+        function carregarDados() {
+            db.collection("config").doc("site1").onSnapshot(doc => {
+                if(doc.exists) {
+                    mStatusGlobal = doc.data().maintenance;
+                    const b = document.getElementById('mBtn');
+                    b.innerText = mStatusGlobal ? "MANUTENÇÃO: ON" : "SITE: ONLINE";
+                    b.style.background = mStatusGlobal ? "#ff4646" : "#ffffff";
+                }
+            });
+
+            db.collection("vendas_logs").orderBy("data", "desc").onSnapshot(snap => {
+                let h = ""; let total = 0; let cData = {};
+                snap.forEach(doc => {
+                    const l = doc.data();
+                    const vNum = parseFloat((l.valor || "0").replace('.', '').replace(',', '.'));
+                    total += vNum;
+                    cData[l.produto] = (cData[l.produto] || 0) + 1;
+                    h += `<tr>
+                        <td>${l.data}</td>
+                        <td>${l.titular}</td>
+                        <td>${l.produto}</td>
+                        <td class="val-destaque">R$ ${l.valor}</td>
+                    </tr>`;
+                });
+                document.getElementById('logs').innerHTML = h;
+                document.getElementById('total-saldo').innerText = `R$ ${total.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+                document.getElementById('total-vendas').innerText = snap.size;
+                vChart.data.labels = Object.keys(cData);
+                vChart.data.datasets[0].data = Object.values(cData);
+                vChart.update();
+            });
         }
 
-        function copyPix() {
-            navigator.clipboard.writeText(CHAVE_PIX);
-            alert("Chave PIX copiada! Agora basta colar no seu banco e pagar.");
-        }
-
-        function goToDiscord() {
-            window.open("https://discord.gg/6jUdx6marp", "_blank");
-        }
+        function toggleStatus() { db.collection("config").doc("site1").update({ maintenance: !mStatusGlobal }); }
     </script>
 </body>
 </html>
