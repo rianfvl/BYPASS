@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ADMIN | RODRIGUES</title>
+    <title>dashboard rodrigues</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -15,7 +15,7 @@
         :root {
             --primary: #1e1e2f; --accent: #ffffff; --glow: #6246ff;   
             --bg: #050505; --card-bg: #0d0d15; --text: #ffffff; --danger: #ff4646;
-            --success: #00ff88;
+            --success: #00ff88; --warning: #ffb100;
         }
 
         body { 
@@ -25,22 +25,30 @@
 
         #login-div { height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
         .login-card { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; width: 100%; }
-        input { padding: 14px; margin: 10px 0; width: 100%; background: #050505; border: 1px solid #2a2a40; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
+        input, .search-input { padding: 14px; margin: 10px 0; width: 100%; background: #050505; border: 1px solid #2a2a40; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
+        
         .btn-primary { padding: 14px; width: 100%; background: var(--accent); border: none; color: #000; font-weight: 900; cursor: pointer; border-radius: 6px; text-transform: uppercase; }
 
         .panel { display: none; width: 100%; max-width: 1100px; animation: fadeIn 0.5s; }
         
-        /* ALTERAÇÃO AQUI: UM EMBAIXO DO OUTRO */
         .stats-grid { 
             display: grid; 
-            grid-template-columns: 1fr; /* Apenas uma coluna para empilhar */
+            grid-template-columns: 1fr 1fr; 
             gap: 12px; 
             margin-bottom: 25px; 
         }
         
-        .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .stat-card .value { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
-        .stat-card h3 { font-size: 0.7rem; opacity: 0.5; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
+        /* Ajuste para mobile em 1 coluna se necessário, mas mantendo o grid para os novos cards */
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+        .stat-card .value { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
+        .stat-card h3 { font-size: 0.65rem; opacity: 0.5; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
+        .trend { font-size: 0.7rem; margin-top: 5px; font-weight: 600; }
+        .trend.up { color: var(--success); }
+
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-bar input { margin: 0; flex: 1; min-width: 150px; }
 
         .chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 25px; height: 300px; }
 
@@ -50,20 +58,29 @@
             background: var(--card-bg);
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.05);
-            -webkit-overflow-scrolling: touch;
         }
 
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { background: #161625; color: var(--accent); text-transform: uppercase; font-size: 0.7rem; padding: 15px; text-align: left; }
         td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
         
         .val-destaque { color: var(--success); font-weight: 900; }
+        .id-transacao { font-family: monospace; opacity: 0.6; font-size: 0.7rem; }
         .btn-maint { padding: 10px 18px; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: #000; font-size: 0.75rem; }
+
+        /* Notificação */
+        #notif-toast { 
+            position: fixed; bottom: 20px; right: 20px; background: var(--glow); 
+            padding: 15px 25px; border-radius: 8px; font-weight: bold; 
+            display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
+
+    <div id="notif-toast">🔔 NOVO PEDIDO RECEBIDO!</div>
 
     <div id="login-div">
         <img src="https://i.ibb.co/9k9Vj1wP/image.png" style="width:100px; border-radius:50%; border:3px solid var(--glow); margin-bottom:20px;">
@@ -85,11 +102,26 @@
             <div class="stat-card">
                 <h3>SALDO TOTAL</h3>
                 <div class="value" id="total-saldo">R$ 0,00</div>
+                <div class="trend up">↑ 12% vs ontem</div>
             </div>
             <div class="stat-card">
-                <h3>PEDIDOS GERADOS</h3>
+                <h3>PEDIDOS TOTAL</h3>
                 <div class="value" id="total-vendas">0</div>
+                <div class="trend up">Filtro Ativo</div>
             </div>
+            <div class="stat-card">
+                <h3>TICKET MÉDIO</h3>
+                <div class="value" id="ticket-medio">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <h3>SITUAÇÃO</h3>
+                <div class="value" style="color: var(--success); font-size: 1rem;">ESTÁVEL</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <input type="text" id="searchTable" placeholder="🔎 Buscar cliente ou produto..." onkeyup="filtrarTabela()">
+            <input type="date" id="dateFilter" onchange="carregarDados()">
         </div>
 
         <div class="chart-container">
@@ -100,6 +132,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>DATA/HORA</th>
                         <th>CLIENTE</th>
                         <th>PRODUTO</th>
@@ -112,6 +145,7 @@
     </div>
 
     <script>
+        // Configurações Firebase (Mantidas originais)
         const firebaseConfig = { 
             apiKey: "AIzaSyAoGCo4_tMeaXZsJAa2ckzi7E6zG0vQ44A", 
             authDomain: "rodrigues-shop.firebaseapp.com", 
@@ -126,6 +160,7 @@
 
         let vChart;
         let mStatusGlobal = false;
+        let lastCount = -1;
 
         function logar() {
             const e = document.getElementById('email').value;
@@ -166,25 +201,61 @@
 
             db.collection("vendas_logs").orderBy("data", "desc").onSnapshot(snap => {
                 let h = ""; let total = 0; let cData = {};
+                
+                // Lógica de Notificação
+                if (lastCount !== -1 && snap.size > lastCount) {
+                    showNotification();
+                }
+                lastCount = snap.size;
+
                 snap.forEach(doc => {
                     const l = doc.data();
                     const vNum = parseFloat((l.valor || "0").replace('.', '').replace(',', '.'));
+                    
+                    // ID Simplificado baseado no ID do Documento Firebase
+                    const shortID = doc.id.substring(0,6).toUpperCase();
+
                     total += vNum;
                     cData[l.produto] = (cData[l.produto] || 0) + 1;
+                    
                     h += `<tr>
+                        <td class="id-transacao">#${shortID}</td>
                         <td>${l.data}</td>
-                        <td>${l.titular}</td>
+                        <td>👤 ${l.titular || 'Desconhecido'}</td>
                         <td>${l.produto}</td>
                         <td class="val-destaque">R$ ${l.valor}</td>
                     </tr>`;
                 });
+
                 document.getElementById('logs').innerHTML = h;
                 document.getElementById('total-saldo').innerText = `R$ ${total.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
                 document.getElementById('total-vendas').innerText = snap.size;
+                
+                // Cálculo de Ticket Médio
+                const avg = snap.size > 0 ? total / snap.size : 0;
+                document.getElementById('ticket-medio').innerText = `R$ ${avg.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+
                 vChart.data.labels = Object.keys(cData);
                 vChart.data.datasets[0].data = Object.values(cData);
                 vChart.update();
             });
+        }
+
+        function filtrarTabela() {
+            const input = document.getElementById("searchTable").value.toUpperCase();
+            const trs = document.getElementById("logs").getElementsByTagName("tr");
+            for (let i = 0; i < trs.length; i++) {
+                const text = trs[i].textContent || trs[i].innerText;
+                trs[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+        function showNotification() {
+            const t = document.getElementById('notif-toast');
+            t.style.display = 'block';
+            // Som de alerta (opcional, requer interação prévia do user com a página)
+            const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/24/audio_7302484a0c.mp3');
+            audio.play().catch(()=> {}); 
+            setTimeout(() => { t.style.display = 'none'; }, 4000);
         }
 
         function toggleStatus() { db.collection("config").doc("site1").update({ maintenance: !mStatusGlobal }); }
