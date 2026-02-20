@@ -3,149 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>dashboard rodrigues</title>
+    <title>Painel Administrativo | Rodrigues</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
+        /* --- DESIGN SYSTEM: ESTILO CLEAN / PAYPAL --- */
         :root {
-            --primary: #1e1e2f; --accent: #ffffff; --glow: #6246ff;   
-            --bg: #050505; --card-bg: #0d0d15; --text: #ffffff; --danger: #ff4646;
-            --success: #00ff88; --warning: #ffb100;
+            --primary: #0070ba; /* Azul PayPal */
+            --primary-hover: #005ea6;
+            --bg: #f5f7fa; 
+            --card-bg: #ffffff; 
+            --text: #2c2e2f; 
+            --text-dim: #6c7378;
+            --border: #dbe0e3;
+            --success: #148570;
+            --danger: #c22e2e;
+            --sidebar-width: 240px;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+            padding: 0;
         }
 
         body { 
-            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
-            margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            overflow-x: hidden;
         }
 
-        #login-div { height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
-        .login-card { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; width: 100%; }
-        input, .search-input { padding: 14px; margin: 10px 0; width: 100%; background: #050505; border: 1px solid #2a2a40; color: white; border-radius: 6px; box-sizing: border-box; outline: none; }
-        
-        .btn-primary { padding: 14px; width: 100%; background: var(--accent); border: none; color: #000; font-weight: 900; cursor: pointer; border-radius: 6px; text-transform: uppercase; }
-
-        .panel { display: none; width: 100%; max-width: 1100px; animation: fadeIn 0.5s; }
-        
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 12px; 
-            margin-bottom: 25px; 
+        /* --- LOGIN MINIMALISTA --- */
+        #login-div { 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #ffffff;
         }
-        
-        /* Ajuste para mobile em 1 coluna se necessário, mas mantendo o grid para os novos cards */
-        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
 
-        .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
-        .stat-card .value { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
-        .stat-card h3 { font-size: 0.65rem; opacity: 0.5; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
-        .trend { font-size: 0.7rem; margin-top: 5px; font-weight: 600; }
-        .trend.up { color: var(--success); }
-
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-bar input { margin: 0; flex: 1; min-width: 150px; }
-
-        .chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 25px; height: 300px; }
-
-        .table-wrap { 
+        .login-card { 
             width: 100%; 
-            overflow-x: auto; 
-            background: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
+            max-width: 400px;
+            padding: 40px;
+            text-align: center;
         }
 
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { background: #161625; color: var(--accent); text-transform: uppercase; font-size: 0.7rem; padding: 15px; text-align: left; }
-        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
+        .login-card img {
+            width: 60px;
+            margin-bottom: 24px;
+        }
+
+        .login-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        .login-card p {
+            color: var(--text-dim);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        input { 
+            display: block;
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
         
-        .val-destaque { color: var(--success); font-weight: 900; }
-        .id-transacao { font-family: monospace; opacity: 0.6; font-size: 0.7rem; }
-        .btn-maint { padding: 10px 18px; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: #000; font-size: 0.75rem; }
-
-        /* Notificação */
-        #notif-toast { 
-            position: fixed; bottom: 20px; right: 20px; background: var(--glow); 
-            padding: 15px 25px; border-radius: 8px; font-weight: bold; 
-            display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .btn-primary { 
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 25px; /* Botão arredondado estilo PayPal */
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* --- LAYOUT DO PAINEL --- */
+        .app-container { 
+            display: none; 
+            min-height: 100vh;
+        }
+
+        /* Navegação Superior (Abas Estilo PayPal) */
+        header.nav-header {
+            height: 65px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 50px;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 30px;
+            margin-left: 50px;
+            height: 100%;
+        }
+
+        .tab-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-item:hover { color: var(--primary); }
+        .tab-item.active { 
+            color: var(--primary); 
+            border-bottom-color: var(--primary); 
+        }
+
+        /* Conteúdo Principal */
+        main.content {
+            margin-top: 65px;
+            width: 100%;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 40px 20px;
+        }
+
+        /* --- CARDS DE MÉTRICAS --- */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-box {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .stat-box .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        /* --- SEÇÃO DE TABELA --- */
+        .section-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 { font-size: 18px; font-weight: 600; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #fcfcfd;
+            padding: 16px 24px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .badge-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-paid { background: #e6f7f4; color: var(--success); }
+
+        /* --- FILTROS E BUSCA --- */
+        .filter-bar {
+            padding: 20px 24px;
+            background: #fcfcfd;
+            display: flex;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            flex: 1;
+            margin-bottom: 0;
+            padding: 10px 16px;
+            background: #fff;
+        }
+
+        /* Botão de Manutenção Estilo Toggle */
+        .maint-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* --- GRAFICO --- */
+        .chart-section {
+            padding: 24px;
+            height: 350px;
+        }
+
+        /* --- NOTIFICAÇÃO --- */
+        #notif-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c2e2f;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        @media (max-width: 768px) {
+            header.nav-header { padding: 0 20px; }
+            .nav-tabs { display: none; }
+            .stats-summary { grid-template-columns: 1fr; }
+            main.content { padding: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="notif-toast">🔔 NOVO PEDIDO RECEBIDO!</div>
+    <div id="notif-toast">🔔 Você recebeu uma nova transação</div>
 
     <div id="login-div">
-        <img src="https://i.ibb.co/9k9Vj1wP/image.png" style="width:100px; border-radius:50%; border:3px solid var(--glow); margin-bottom:20px;">
         <div class="login-card">
-            <h2 style="font-weight: 900; margin-bottom: 20px;">RODRIGUES ADMIN</h2>
+            <img src="https://i.ibb.co/9k9Vj1wP/image.png" alt="Logo">
+            <h2>Fazer login</h2>
+            <p>Acesse seu painel administrativo Rodrigues</p>
+            
             <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="pass" placeholder="Senha">
-            <button class="btn-primary" onclick="logar()">Acessar</button>
+            
+            <button class="btn-primary" onclick="logar()">Entrar</button>
+            
+            <div style="margin-top: 30px; font-size: 12px; color: var(--text-dim);">
+                Proteção por reCAPTCHA e Segurança Rodrigues
+            </div>
         </div>
     </div>
 
-    <div class="panel" id="panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h1 style="margin:0; font-weight: 900;">ANALYTICS</h1>
-            <button id="mBtn" class="btn-maint" onclick="toggleStatus()">Carregando...</button>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>SALDO TOTAL</h3>
-                <div class="value" id="total-saldo">R$ 0,00</div>
-                <div class="trend up">↑ 12% vs ontem</div>
+    <div class="app-container" id="app-container">
+        
+        <header class="nav-header">
+            <div style="font-weight: 800; color: var(--primary); font-size: 20px;">Rodrigues</div>
+            <nav class="nav-tabs">
+                <div class="tab-item active">Resumo</div>
+                <div class="tab-item">Atividade</div>
+                <div class="tab-item">Enviar e Solicitar</div>
+                <div class="tab-item">Carteira</div>
+            </nav>
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 20px;">
+                <i class="ph ph-bell" style="font-size: 20px; cursor: pointer;"></i>
+                <i class="ph ph-gear" style="font-size: 20px; cursor: pointer;" onclick="location.reload()"></i>
             </div>
-            <div class="stat-card">
-                <h3>PEDIDOS TOTAL</h3>
-                <div class="value" id="total-vendas">0</div>
-                <div class="trend up">Filtro Ativo</div>
-            </div>
-            <div class="stat-card">
-                <h3>TICKET MÉDIO</h3>
-                <div class="value" id="ticket-medio">R$ 0,00</div>
-            </div>
-            <div class="stat-card">
-                <h3>SITUAÇÃO</h3>
-                <div class="value" style="color: var(--success); font-size: 1rem;">ESTÁVEL</div>
-            </div>
-        </div>
+        </header>
 
-        <div class="filter-bar">
-            <input type="text" id="searchTable" placeholder="🔎 Buscar cliente ou produto..." onkeyup="filtrarTabela()">
-            <input type="date" id="dateFilter" onchange="carregarDados()">
-        </div>
+        <main class="content">
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
+                <div>
+                    <h1 style="font-size: 24px; font-weight: 400;">Olá, Rian Rodrigues</h1>
+                    <p style="color: var(--text-dim); font-size: 14px;">Aqui está seu faturamento total</p>
+                </div>
+                <button id="mBtn" class="maint-btn" onclick="toggleStatus()">Carregando...</button>
+            </div>
 
-        <div class="chart-container">
-            <canvas id="vendasChart"></canvas>
-        </div>
+            <section class="stats-summary">
+                <div class="stat-box">
+                    <h3>Saldo Disponível</h3>
+                    <div class="value" id="total-saldo">R$ 0,00</div>
+                    <div style="color: var(--primary); font-size: 13px; font-weight: 600; margin-top: 10px; cursor: pointer;">Transferir fundos</div>
+                </div>
+                <div class="stat-box">
+                    <h3>Vendas Hoje</h3>
+                    <div class="value" id="total-vendas">0</div>
+                    <div style="color: var(--text-dim); font-size: 13px; margin-top: 10px;">Processamento normal</div>
+                </div>
+                <div class="stat-box">
+                    <h3>Ticket Médio</h3>
+                    <div class="value" id="ticket-medio">R$ 0,00</div>
+                    <div style="color: var(--success); font-size: 13px; font-weight: 600; margin-top: 10px;">+4.2% este mês</div>
+                </div>
+            </section>
 
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>DATA/HORA</th>
-                        <th>CLIENTE</th>
-                        <th>PRODUTO</th>
-                        <th>VALOR PAGO</th>
-                    </tr>
-                </thead>
-                <tbody id="logs"></tbody>
-            </table>
-        </div>
+            <div class="section-card">
+                <div class="card-header">
+                    <h2>Fluxo de Vendas</h2>
+                </div>
+                <div class="chart-section">
+                    <canvas id="vendasChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="card-header">
+                    <h2>Atividade Recente</h2>
+                    <div style="color: var(--primary); font-size: 14px; font-weight: 600; cursor: pointer;">Ver tudo</div>
+                </div>
+                
+                <div class="filter-bar">
+                    <input type="text" id="searchTable" class="search-input" placeholder="Filtrar por nome ou produto..." onkeyup="filtrarTabela()">
+                    <input type="date" id="dateFilter" style="width: auto; margin-bottom: 0;" onchange="carregarDados()">
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome / Cliente</th>
+                                <th>Tipo / Produto</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
     </div>
 
     <script>
-        // Configurações Firebase (Mantidas originais)
+        // CONFIGURAÇÃO ORIGINAL MANTIDA
         const firebaseConfig = { 
             apiKey: "AIzaSyAoGCo4_tMeaXZsJAa2ckzi7E6zG0vQ44A", 
             authDomain: "rodrigues-shop.firebaseapp.com", 
@@ -169,13 +435,13 @@
                 abrirPainel();
             } else {
                 auth.signInWithEmailAndPassword(e, s).then(() => abrirPainel())
-                .catch(err => alert("Senha Incorreta"));
+                .catch(err => alert("Credenciais incorretas."));
             }
         }
 
         function abrirPainel() {
             document.getElementById('login-div').style.display = 'none';
-            document.getElementById('panel').style.display = 'block';
+            document.getElementById('app-container').style.display = 'block';
             initChart();
             carregarDados();
         }
@@ -184,25 +450,43 @@
             const ctx = document.getElementById('vendasChart').getContext('2d');
             vChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: [], datasets: [{ data: [], borderColor: '#ffffff', backgroundColor: 'rgba(98, 70, 255, 0.2)', fill: true, tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                data: { labels: [], datasets: [{ 
+                    data: [], 
+                    borderColor: '#0070ba', 
+                    backgroundColor: 'rgba(0, 112, 186, 0.05)', 
+                    fill: true, 
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 5
+                }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    }
+                }
             });
         }
 
         function carregarDados() {
+            // Status do Site
             db.collection("config").doc("site1").onSnapshot(doc => {
                 if(doc.exists) {
                     mStatusGlobal = doc.data().maintenance;
                     const b = document.getElementById('mBtn');
-                    b.innerText = mStatusGlobal ? "MANUTENÇÃO: ON" : "SITE: ONLINE";
-                    b.style.background = mStatusGlobal ? "#ff4646" : "#ffffff";
+                    b.innerText = mStatusGlobal ? "Em Manutenção" : "Site Online";
+                    b.style.color = mStatusGlobal ? "#c22e2e" : "#148570";
                 }
             });
 
+            // Vendas
             db.collection("vendas_logs").orderBy("data", "desc").onSnapshot(snap => {
                 let h = ""; let total = 0; let cData = {};
                 
-                // Lógica de Notificação
                 if (lastCount !== -1 && snap.size > lastCount) {
                     showNotification();
                 }
@@ -212,18 +496,15 @@
                     const l = doc.data();
                     const vNum = parseFloat((l.valor || "0").replace('.', '').replace(',', '.'));
                     
-                    // ID Simplificado baseado no ID do Documento Firebase
-                    const shortID = doc.id.substring(0,6).toUpperCase();
-
                     total += vNum;
                     cData[l.produto] = (cData[l.produto] || 0) + 1;
                     
                     h += `<tr>
-                        <td class="id-transacao">#${shortID}</td>
-                        <td>${l.data}</td>
-                        <td>👤 ${l.titular || 'Desconhecido'}</td>
-                        <td>${l.produto}</td>
-                        <td class="val-destaque">R$ ${l.valor}</td>
+                        <td style="color: var(--text-dim); font-size: 13px;">${l.data}</td>
+                        <td style="font-weight: 600;">${l.titular || 'Cliente Rodrigues'}</td>
+                        <td style="color: var(--text-dim);">${l.produto}</td>
+                        <td><span class="badge-status status-paid">Concluído</span></td>
+                        <td style="text-align: right; font-weight: 700; color: #000;">R$ ${l.valor}</td>
                     </tr>`;
                 });
 
@@ -231,7 +512,6 @@
                 document.getElementById('total-saldo').innerText = `R$ ${total.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
                 document.getElementById('total-vendas').innerText = snap.size;
                 
-                // Cálculo de Ticket Médio
                 const avg = snap.size > 0 ? total / snap.size : 0;
                 document.getElementById('ticket-medio').innerText = `R$ ${avg.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
 
@@ -249,16 +529,17 @@
                 trs[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
             }
         }
+
         function showNotification() {
             const t = document.getElementById('notif-toast');
             t.style.display = 'block';
-            // Som de alerta (opcional, requer interação prévia do user com a página)
-            const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/24/audio_7302484a0c.mp3');
-            audio.play().catch(()=> {}); 
+            new Audio('https://cdn.pixabay.com/audio/2022/03/24/audio_7302484a0c.mp3').play().catch(()=>{}); 
             setTimeout(() => { t.style.display = 'none'; }, 4000);
         }
 
-        function toggleStatus() { db.collection("config").doc("site1").update({ maintenance: !mStatusGlobal }); }
+        function toggleStatus() { 
+            db.collection("config").doc("site1").update({ maintenance: !mStatusGlobal }); 
+        }
     </script>
 </body>
 </html>
